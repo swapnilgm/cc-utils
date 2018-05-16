@@ -195,6 +195,15 @@ def which(cmd_name: str) -> str:
     return cmd_path
 
 
+def random_str(prefix=None, length=12):
+    import random, string
+    if prefix:
+        length -= len(prefix)
+    else:
+        prefix = ''
+    return prefix + ''.join(random.choice(string.ascii_lowercase) for _ in range(length))
+
+
 def merge_dicts(base: dict, other: dict, list_semantics='set_merge'):
     '''
     merges copies of the given dict instances and returns the merge result.
