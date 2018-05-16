@@ -114,6 +114,60 @@ class GitHubHelper(object):
             util.fail('no such user: {u}'.format(u=user_name))
         return user
 
+    def find_existing_pr(self, title: str):
+        for pr in self.repository.pull_requests():
+            if pr.title.strip() == title.strip():
+                return pr
+
+    def create_pull_request(self,
+        title: str,
+        base: str,
+        head: str,
+        body: str = None,
+    ):
+        pull_request = self.repository.create_pull(
+            title = title,
+            base = base,
+            head = head,
+            body = body,
+        )
+        if not pull_request:
+            util.fail("Could not create pull-request {pr} from branch '{head}' to '{base}'".format(
+                pr=title,
+                head=head,
+                base=base,
+            ))
+
+    def get_latest_release_tag_name(self):
+        latest_release = self.repository.latest_release()
+        return latest_release.tag_name
+
+    def get_tagged_commit_sha(self, tag_name:str):
+        ref_string = 'tags/'+tag_name
+        tag_ref = self.repository.ref(ref_string)
+        if not tag_ref:
+            util.fail("Could not get ref '{r}'.".format(
+                r=ref_string,
+            ))
+        if not tag_ref.object.type == 'commit':
+            util.fail("Given tag '{t}' does not point to a commit.".format(
+                t=tag_name,
+            ))
+        return tag_ref.object.sha
+
+    def get_submodule_commit_at_sha(self, submodule_path: str, sha: str):
+        submodule = self.repository.file_contents(submodule_path, sha)
+
+        if not submodule.type == 'submodule':
+            raise ValueError("No submodule found at path '{p}' at commit '{s}'".format(
+                p=submodule_path,
+                s=sha,
+            ))
+
+        return submodule.sha
+
+
+
 
 def _create_github_api_object(
     github_cfg: 'GithubConfig',
